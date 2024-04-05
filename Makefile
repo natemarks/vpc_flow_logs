@@ -10,7 +10,7 @@ COMMIT := $(shell git rev-parse HEAD)
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/)
 CDIR = $(shell pwd)
-EXECUTABLES := prog1 prog2
+EXECUTABLES := vpc_flow_logs
 GOOS := linux darwin
 GOARCH := amd64
 
@@ -28,7 +28,7 @@ ${EXECUTABLES}:
         echo "COMMIT: $(COMMIT)" >> build/$(COMMIT)/$${o}/$${a}/version.txt ; \
         env GOOS=$${o} GOARCH=$${a} \
         go build  -v -o build/$(COMMIT)/$${o}/$${a}/$@ \
-				-ldflags="-X github.com/natemarks/vpc_flow_logs/version.Version=${COMMIT}" ${PKG}/cmd/$@; \
+				-ldflags="-X github.com/natemarks/vpc_flow_logs/version.Version=${COMMIT}" ${PKG}; \
 	  done \
     done ; \
 
@@ -73,13 +73,14 @@ gocyclo: # run cyclomatic complexity check
 
 godeadcode: # run cyclomatic complexity check
 	go install golang.org/x/tools/cmd/deadcode@latest
-	deadcode -test github.com/natemarks/vpc_flow_logs/cmd/...
+	deadcode -test github.com/natemarks/vpc_flow_logs/...
 
 govulncheck: # run cyclomatic complexity check
 	go install golang.org/x/vuln/cmd/govulncheck@latest
 	govulncheck ./...
 
 static: goimports fmt vet lint gocyclo godeadcode govulncheck test
+
 clean:
 	-@rm ${OUT} ${OUT}-v*
 
@@ -96,27 +97,5 @@ shellcheck: ## use black to format python files
 	( \
        git ls-files '*.sh' |  xargs shellcheck --format=gcc; \
     )
-
-docker-build: build ## create docker image with commit tag
-	( \
-	   docker build --no-cache \
-       	-t vpc_flow_logs:$(COMMIT) \
-       	-t vpc_flow_logs:latest \
-       	-f Dockerfile .; \
-	)
-
-docker-release: docker-build ## upload the latest docker image to ECR
-	( \
-	   aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_NUMBER).dkr.ecr.$(AWS_REGION).amazonaws.com; \
-	   docker tag vpc_flow_logs:latest $(AWS_ACCOUNT_NUMBER).dkr.ecr.$(AWS_REGION).amazonaws.com/vpc_flow_logs:latest; \
-	   docker push $(AWS_ACCOUNT_NUMBER).dkr.ecr.$(AWS_REGION).amazonaws.com/vpc_flow_logs:latest; \
-	)
-
-docker-run: ## run docker image
-	( \
-	   docker run -it --rm \
-	   	-e INTERVAL='6' \
-	   	vpc_flow_logs \
-	)
 
 .PHONY: build release static upload vet lint fmt gocyclo goimports test

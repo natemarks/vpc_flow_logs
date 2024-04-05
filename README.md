@@ -1,73 +1,65 @@
 # vpc_flow_logs
-The golang project template builds in some automation to get off the ground quickly. Here's how to get started.
+
+It's generally not valuable to keep VPC flow logs all the time. This project
+can be used to configure flow logs for cloudwatch to quickly  look at the data,
+then clean up the resources.  cloud watch is a little pricey, so we set the
+retention to 14 days.  
+
+The executable has show, create and delete subcommands. 
+
+Show will show all  the configured flow logs in the current account and region
+
+Create will create and configure  the log groue, role, and flow log for the
+specified VPC
+
+Delete will delete the flow log, role, and log group for the specified flow log
+ID
 
 
-Let's get the tests running right away. 'make static' will run all of the local checks
-```shell
-cd vpc_flow_logs
-git init .
-git add -A
-git commit -am 'initial'
-go mod init
-go mod tidy
-make statc
+## Usage
+
+
+Print help:
+
+```bash
+vpc_flow_logs
+show/create/delete VPC flow logs in your account and region.
+
+Usage:
+  vpc_flow_logs [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  create      Create a new VPC flow log configuration
+  delete      Delete a vpc flow log configuration and related resources
+  help        Help about any command
+  show        Print VPC flow log descriptions
+
+Flags:
+  -h, --help     help for vpc_flow_logs
+  -t, --toggle   Help message for toggle
+
+Use "vpc_flow_logs [command] --help" for more information about a command.
+
 ```
 
-Now let's build the exampls executables
-```shell
-make build
-tree build
-build
-├── 72ff9f1cf1d5c56a9c9261774bd906efce6245c4
-│   ├── darwin
-│   │   └── amd64
-│   │       ├── prog1
-│   │       ├── prog2
-│   │       └── version.txt
-│   └── linux
-│       └── amd64
-│           ├── prog1
-│           ├── prog2
-│           └── version.txt
-└── current -> /Users/nmarks/go/src/github.com/natemarks/stayback/build/72ff9f1cf1d5c56a9c9261774bd906efce6245c4
 
-6 directories, 6 files
+Show the current flwo log configurations:
+
+```bash
+vpc_flow_logs show
+Flow Log Descriptions(151924297945 :: us-east-1)
+FlowLogID: fl-04f78f2e41c75c80c
+VPCID: vpc-0595265c52fa07048
+RoleName: flowlogsRole-vpc-0595265c52fa07048
+RoleARN: arn:aws:iam::151924297945:role/flow_logs_to_cloudwatch_logs
+LogGroupName: your-log-group-name/aws/vpc_vlow_logs/vpc-0595265c52fa07048
+LogGroupARN: arn:aws:logs:us-east-1:151924297945:log-group:your-log-group-name/aws/vpc_vlow_logs/vpc-0595265c52fa07048:*
+DeliveryStatus: ACTIVE
+
 ```
+### Future Ideas
+
+execute this as SSM run commands. managed the run  command documents in CDK
 
 
-Let's say you were happy with the project and you wanted to release it, you'd bump the version. 
-```shell
-# clean-venv creates a python virtual environment jsut to use the bump2version python package
-make clean-venv
-# this does a patch level semver bump
-make part=patch bump
-```
-
-Now create the release contents with naming that's ok for github releases:
-```shell
-make release
-warning: ignoring symlink /Users/nmarks/go/src/github.com/natemarks/stayback/build/current
-warning: ignoring symlink /Users/nmarks/go/src/github.com/natemarks/stayback/build/current
-f1de3a5aaa990726bec76b23f0368b5d90d5fa86/linux/amd64
-f1de3a5aaa990726bec76b23f0368b5d90d5fa86/darwin/amd64
-f1de3a5aaa990726bec76b23f0368b5d90d5fa86/linux/amd64
-f1de3a5aaa990726bec76b23f0368b5d90d5fa86/darwin/amd64
-rm -f build/current
-ln -s /Users/nmarks/go/src/github.com/natemarks/stayback/build/f1de3a5aaa990726bec76b23f0368b5d90d5fa86 /Users/nmarks/go/src/github.com/natemarks/stayback/build/current
-mkdir -p release/0.0.1
-a .
-a ./prog2
-a ./version.txt
-a ./prog1
-a .
-a ./prog2
-a ./version.txt
-a ./prog1
-❯ tree release
-release
-└── 0.0.1
-    ├── stayback_0.0.1_darwin_amd64.tar.gz
-    └── stayback_0.0.1_linux_amd64.tar.gz
-
-1 directory, 2 files
-```
